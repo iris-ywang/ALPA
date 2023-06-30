@@ -2,11 +2,8 @@ import numpy as np
 from itertools import permutations, product
 
 from pa_basics.all_pairs import paired_data_by_pair_id
+from pa_basics.split_data import pair_test_with_train
 from pa_basics.rating import rating_trueskill
-from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
-
-ML_REG = RandomForestRegressor(random_state=5963, n_jobs=-1)
-ML_CLS = RandomForestClassifier(random_state=5963, n_jobs=-1)
 
 def build_ml_model(model, train_data, test_data=None):
     """Given ML model(in sklearn format), and train data in the
@@ -100,7 +97,7 @@ def run_pairwise_approach_testing(
         ml_model_cls,
         all_data: dict,
         c2_or_c3: str,
-        batch_size=1000000,
+        batch_size=100,
         sign=True,
         abs=True,
         normal=False,
@@ -124,13 +121,13 @@ def run_pairwise_approach_testing(
         else:
             test_pair_id_batch = test_pair_ids[test_batch * batch_size:]
         test_pairs_batch = paired_data_by_pair_id(data=all_data["train_test"],
-                                                       pair_ids=test_pair_id_batch)
+                                                  pair_ids=test_pair_id_batch)
         Y_pa_true += list(test_pairs_batch[:, 0])
         if sign: Y_pa_sign += list(ml_model_cls.predict(test_pairs_batch[:, 1:]))
         if abs: Y_pa_dist += list(ml_model_reg_abs.predict(np.absolute(test_pairs_batch[:, 1:])))
         if normal and ml_model_reg_normal is not None:
             Y_pa_normal += list(ml_model_reg_normal.predict(test_pairs_batch[:, 1:]))
-        if Y_pa_dist(test_batch + 1) * batch_size >= len(test_pair_ids): break
+        if (test_batch + 1) * batch_size >= len(test_pair_ids): break
 
     return Y_pa_sign, Y_pa_dist, Y_pa_normal, Y_pa_true
 
@@ -146,6 +143,10 @@ def find_next_batch_pairwise_approach(
         batch_size: int=10,
 ) -> list:
     """Only uses c2_test_pairs to rank and estimate uncertainty."""
+    # Check that rank_only, uncertainty_only and ucb can only have one True
+    if (rank_only and uncertainty_only) or (rank_only and ucb) or (uncertainty_only and ucb):
+        raise ValueError("Can only return batch for one type of selection method.")
+
     if rank_only or ucb:
         y_ranking = rating_trueskill(
             Y_pa_c2_sign, all_data["c2_test_pair_ids"], all_data["y_true"]
@@ -212,7 +213,7 @@ def estimate_y_from_averaging(Y_pa_c2, c2_test_pair_ids, test_ids, y_true, Y_wei
 def find_top_x(x: int, y_test_score: np.array) -> list:
     overall_orders = np.argsort(-y_test_score)  # a list of sample IDs in the descending order of activity values
     top_tests_id = overall_orders[0: x]
-    return top_tests_id
+    return list(top_tests_id)
 
 
 def estimate_Y_from_sign_and_abs(all_data, Y_pa_c2_sign, Y_pa_c2_abs):
@@ -237,25 +238,35 @@ def calculate_pairwise_differences_from_y(
             Y_true.append(np.sign(y_true_all[a] - y_true_all[b]))
     return Y_true, Y_pred
 
-def find_batch_with_pairwise_approach(all_data: dict, rank_only, uncertainty_only, ucb):
-    ml_model_reg_abs, ml_model_cls, ml_model_reg_normal, Y_pa_c1 = run_pairwise_approach_training(ML_REG,ML_CLS,all_data, normal = False)
-    Y_pa_c2_sign, Y_pa_c2_abs, Y_pa_c2_norm, Y_pa_c2_true = run_pairwise_approach_testing(ml_model_reg_abs, ml_model_cls, all_data, "c2")
-    batch_ids = find_next_batch_pairwise_approach(all_data, Y_pa_c2_sign, Y_pa_c2_norm, rank_only=rank_only, uncertainty_only=uncertainty_only, ucb=ucb, batch_size=10)
+def find_batch_with_pairwise_approach(all_data: dict, ml_model_reg, ml_model_cls, rank_only, uncertainty_only, ucb):
+    ml_model_reg_abs, ml_model_cls, ml_model_reg_normal, Y_pa_c1 = \
+        run_pairwise_approach_training(ml_model_reg, ml_model_cls, all_data, normal=False)
+
+    Y_pa_c2_sign, Y_pa_c2_abs, Y_pa_c2_norm, Y_pa_c2_true = \
+        run_pairwise_approach_testing(ml_model_reg_abs, ml_model_cls, all_data, "c2")
+
+    batch_ids = find_next_batch_pairwise_approach(
+        all_data, Y_pa_c2_sign, Y_pa_c2_norm, rank_only=rank_only,
+        uncertainty_only=uncertainty_only, ucb=ucb, batch_size=10
+    )
 
     return batch_ids
 
-def run_active_learning_pairwise_approach(all_data: dict):
+def run_active_learning_pairwise_approach(
+        all_data: dict,
+        ml_model_reg, ml_model_cls,
+        rank_only, uncertainty_only, ucb
+    ):
     """all_data should be a starting batch reflected by train_ids and test_ids.
     e,g. len(test_ids) = 50. """
 
-    rank_only = True
-    uncertainty_only = False
-    ucb = False
     batch_id_record = []
     top_y_record = [] # record of exploitative performance
     mse_record = [] # record of exploration performance
     for batch_no in range(0, 50): # if batch_size = 10, loop until train set size = 550.
-        batch_ids = find_batch_with_pairwise_approach(all_data, rank_only=rank_only, uncertainty_only=uncertainty_only, ucb=ucb)
+        batch_ids = find_batch_with_pairwise_approach(
+            all_data, ml_model_reg, ml_model_cls, rank_only=rank_only, uncertainty_only=uncertainty_only, ucb=ucb
+        )
         batch_id_record.append(batch_ids)
         top_y_record.append(max(all_data['y_true'][batch_ids]))
 
@@ -270,4 +281,4 @@ def run_active_learning_pairwise_approach(all_data: dict):
         all_data["c2_test_pair_ids"] = c2_keys_del
         all_data["c3_test_pair_ids"] = c3_keys_del
 
-    return batch_id_record, top_y_record
+    return batch_id_record, top_y_record, mse_record

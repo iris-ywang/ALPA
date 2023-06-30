@@ -7,12 +7,14 @@ import numpy as np
 from sklearn.utils import shuffle
 from sklearn.preprocessing import minmax_scale
 
+from pa_basics.split_data import get_repetition_rate
 
 def dataset(filename, shuffle_state=None):
     orig_data = import_data(filename, shuffle_state)
     filter1 = uniform_features(orig_data)
     filter2 = duplicated_features(filter1)
     filter2[:, 1:] = minmax_scale(filter2[:, 1:])
+    check_dataset(filter2)
     return filter2
 
 
@@ -79,3 +81,10 @@ def duplicated_features(data):
     new_train = a[ui].T
     new_train_test = np.concatenate((y, new_train), axis=1)
     return new_train_test
+
+def check_dataset(train_test):
+    if len(np.unique(train_test[:, 0])) == 1:
+        raise ValueError("Cannot build model with only one target value. ")
+
+    if get_repetition_rate(train_test) >= 0.5:
+        raise ValueError("At least half of the dataset share the same target value. ")

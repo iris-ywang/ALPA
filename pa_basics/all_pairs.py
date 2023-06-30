@@ -80,8 +80,8 @@ class PairingDatasetByPairID:
 
     def parallelised_pairing_process(self, combination_id):
         sample_id_a, sample_id_b = self.permutation_pairs[combination_id]
-        sample_a = self.data[sample_id_a, :]
-        sample_b = self.data[sample_id_b, :]
+        sample_a = self.data[sample_id_a: sample_id_a + 1, :]
+        sample_b = self.data[sample_id_b: sample_id_b + 1, :]
 
         pair_ab = pair_2samples(sample_a, sample_b)
 
