@@ -32,4 +32,12 @@ if __name__ == '__main__':
         data, ML_REG, rank_only, uncertainty_only, ucb, batch_size=BATCH_SIZE
     )
 
-
+    summary = pd.DataFrame(
+        {
+            "top_y_PA": top_y_record_pa,
+            "top_y_SA": top_y_record_sa,
+            "mse_PA": mse_record_pa,
+            "mse_SA": mse_record_sa
+        }
+    )
+    summary.to_csv("results_summary.csv", index=False)
