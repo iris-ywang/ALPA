@@ -90,7 +90,7 @@ def run_pairwise_approach_testing(
         ml_model_cls,
         all_data: dict,
         c2_or_c3: str,
-        batch_size=100,
+        batch_size=100000,
         sign=True,
         abs=True,
         normal=False,
@@ -225,17 +225,18 @@ def estimate_Y_from_sign_and_abs(all_data, Y_pa_c2_sign, Y_pa_c2_abs):
 def find_batch_with_pairwise_approach(all_data: dict, ml_model_reg, ml_model_cls, rank_only, uncertainty_only, ucb, batch_size):
     calculate_normal_reg = False
     # if normal=False, ml_model_reg_normal = None, then Y_pa_c2_norm = []
+    logging.info("PA - training...")
     ml_model_reg_abs, ml_model_cls, ml_model_reg_normal, Y_pa_c1 = \
         run_pairwise_approach_training(ml_model_reg, ml_model_cls, all_data,
                                        normal=calculate_normal_reg)
 
+    logging.info("PA - testing...")
     Y_pa_c2_sign, Y_pa_c2_abs, Y_pa_c2_norm, Y_pa_c2_true = \
         run_pairwise_approach_testing(
             ml_model_reg_abs=ml_model_reg_abs,
             ml_model_cls=ml_model_cls,
             all_data=all_data,
             c2_or_c3="c2",
-            batch_size=batch_size,
             sign=True,
             abs=True,
             normal=False,
@@ -243,7 +244,7 @@ def find_batch_with_pairwise_approach(all_data: dict, ml_model_reg, ml_model_cls
 
     if not calculate_normal_reg:
         Y_pa_c2_norm = estimate_Y_from_sign_and_abs(all_data, Y_pa_c2_sign, Y_pa_c2_abs)
-
+    logging.info("PA - selecting batch...")
     batch_ids, metrics = find_next_batch_pairwise_approach(
         all_data=all_data,
         Y_pa_c2_sign=Y_pa_c2_sign,
@@ -267,8 +268,7 @@ def run_active_learning_pairwise_approach(
     mse_record = []  # record of exploration performance
     logging.info("Looping ALPA...")
     for batch_no in range(0, 50):  # if batch_size = 10, loop until train set size = 550.
-        if batch_no % 5 == 0:
-            logging.info(f"Now running batch number {batch_no}")
+        logging.info(f"Now running batch number {batch_no}")
 
         batch_ids, metrics = find_batch_with_pairwise_approach(
             all_data, ml_model_reg, ml_model_cls,

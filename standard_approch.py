@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import logging
 
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
@@ -102,6 +103,7 @@ def run_active_learning_standard_approach(
     top_y_record = []  # record of exploitative performance
     mse_record = []  # record of exploration performance
     for batch_no in range(0, 50):  # if batch_size = 10, loop until train set size = 550.
+        logging.info(f"Now running batch number {batch_no}")
         batch_ids, metrics = find_batch_with_standard_approach(
             all_data, ml_model_reg,
             rank_only=rank_only, uncertainty_only=uncertainty_only, ucb=ucb, batch_size=batch_size
