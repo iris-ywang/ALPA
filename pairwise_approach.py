@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import logging
 from itertools import permutations, product
 from sklearn.metrics import mean_squared_error
 
@@ -12,6 +13,7 @@ from pa_basics.run_utils import (
     find_top_x,
 )
 
+logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 
 def run_pairwise_approach_training(
         ml_model_reg,
@@ -203,9 +205,10 @@ def estimate_y_from_Yc2(Y_pa_c2, c2_test_pair_ids, test_ids, y_true, Y_weighted=
             weighted_estimate = (y_true[ida] - delta_ab) * weight
             records[idb] += [weighted_estimate]
 
-    y_estimations_normal = np.array(records)
-    mean = y_estimations_normal.mean(axis=0)
-    var = np.var(y_estimations_normal, axis=0)
+    records_test = [x for x in records if x != []]
+    y_estimations_normal = np.array(records_test)  # (test_set_size, n_estimations)
+    mean = y_estimations_normal.mean(axis=1)
+    var = np.var(y_estimations_normal, axis=1)
     return var, mean
 
 
@@ -242,8 +245,10 @@ def find_batch_with_pairwise_approach(all_data: dict, ml_model_reg, ml_model_cls
         Y_pa_c2_norm = estimate_Y_from_sign_and_abs(all_data, Y_pa_c2_sign, Y_pa_c2_abs)
 
     batch_ids, metrics = find_next_batch_pairwise_approach(
-        all_data, Y_pa_c2_sign, Y_pa_c2_norm, rank_only=rank_only,
-        uncertainty_only=uncertainty_only, ucb=ucb, batch_size=batch_size
+        all_data=all_data,
+        Y_pa_c2_sign=Y_pa_c2_sign,
+        Y_pa_c2_norm=Y_pa_c2_norm,
+        rank_only=rank_only, uncertainty_only=uncertainty_only, ucb=ucb, batch_size=batch_size
     )
     return batch_ids, metrics
 
@@ -260,7 +265,11 @@ def run_active_learning_pairwise_approach(
     batch_id_record = []
     top_y_record = []  # record of exploitative performance
     mse_record = []  # record of exploration performance
-    for batch_no in range(0, 50): # if batch_size = 10, loop until train set size = 550.
+    logging.info("Looping ALPA...")
+    for batch_no in range(0, 50):  # if batch_size = 10, loop until train set size = 550.
+        if batch_no % 5 == 0:
+            logging.info(f"Now running batch number {batch_no}")
+
         batch_ids, metrics = find_batch_with_pairwise_approach(
             all_data, ml_model_reg, ml_model_cls,
             rank_only=rank_only, uncertainty_only=uncertainty_only, ucb=ucb, batch_size=batch_size

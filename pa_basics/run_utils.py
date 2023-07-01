@@ -28,7 +28,7 @@ def calculate_pairwise_differences_from_y(
 
         if y_true_all is not None:
             Y_true.append(np.sign(y_true_all[a] - y_true_all[b]))
-    return Y_true, Y_pred
+    return Y_pred, Y_true
 
 
 def find_top_x(x: int, y_test_score: np.array) -> list:

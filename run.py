@@ -1,12 +1,16 @@
 import pandas as pd
 import os
 import numpy as np
+import logging
+import time
 
 from pairwise_approach import run_active_learning_pairwise_approach
 from standard_approch import run_active_learning_standard_approach
 from pa_basics.import_chembl_data import dataset
 from pa_basics.split_data import initial_split_dataset_by_size
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+
+logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 
 # Cu
 ML_REG = RandomForestRegressor(random_state=5963, n_jobs=-1)
@@ -25,13 +29,18 @@ if __name__ == '__main__':
 
     train_test = dataset(os.getcwd() + CONNECTION + DATASET_FILENAME, shuffle_state=1)
     data = initial_split_dataset_by_size(train_test, 50)
+
+    logging.info("Starting pairwise approach active learning...")
     batch_id_record_pa, top_y_record_pa, mse_record_pa = run_active_learning_pairwise_approach(
         data, ML_REG, ML_CLS, rank_only, uncertainty_only, ucb, batch_size=BATCH_SIZE
     )
+
+    logging.info("Starting standard approach active learning...")
     batch_id_record_sa, top_y_record_sa, mse_record_sa = run_active_learning_standard_approach(
         data, ML_REG, rank_only, uncertainty_only, ucb, batch_size=BATCH_SIZE
     )
 
+    timestr = time.strftime("%Y%m%d-%H%M%S")
     summary = pd.DataFrame(
         {
             "top_y_PA": top_y_record_pa,
@@ -40,4 +49,5 @@ if __name__ == '__main__':
             "mse_SA": mse_record_sa
         }
     )
-    summary.to_csv("results_summary.csv", index=False)
+    summary.to_csv("results_summary_"+timestr+".csv", index=False)
+    logging.info("End. Results saved.")
