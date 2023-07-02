@@ -4,15 +4,15 @@
 Created on Mon Apr 25 18:00:02 2022
 
 @author: dangoo
+
+Rating_related - trueskill
 """
-#rating_related - mainly trueskill
 
 
 from trueskill import Rating, rate_1vs1 
 import numpy as np
 from sklearn.metrics import mean_squared_error, ndcg_score
 from scipy.stats import spearmanr, kendalltau
-
 
 
 
@@ -40,7 +40,6 @@ def rating_trueskill(comparison_results_lst, test_combs_lst, y_true):
     final_ranking = np.array([i.mu for i in ranking])
     
     return final_ranking
-
 
 
 def evaluation(dy, combs_lst, train_ids, test_ids, y_true, func = rating_trueskill, params = None):

@@ -10,6 +10,7 @@ from pa_basics.rating import rating_trueskill
 from pa_basics.run_utils import (
     build_ml_model,
     calculate_pairwise_differences_from_y,
+    check_batch,
     find_top_x,
 )
 
@@ -141,7 +142,7 @@ def find_next_batch_pairwise_approach(
         raise ValueError("Can only return batch for one type of selection method.")
 
     if not (rank_only or uncertainty_only or ucb):
-        print("None of the acquisition func is specified. Running random selection.")
+        logging.info("NOTE: None of the acquisition func is specified. Running random selection.")
     # in case rank_only == uncertainty_only == ucb == False, just return random pick
     batch_ids = random.sample(all_data["test_ids"], batch_size)
 
@@ -157,12 +158,12 @@ def find_next_batch_pairwise_approach(
     y_var_normalised = y_var / np.linalg.norm(y_var)
 
     if rank_only:
-        batch_ids = find_top_x(x=batch_size, y_test_score=y_ranking_normalised)
+        batch_ids = find_top_x(x=batch_size, test_ids=all_data["test_ids"], y_test_score=y_ranking_normalised)
     if uncertainty_only:
-        batch_ids = find_top_x(x=batch_size, y_test_score=y_var_normalised)
+        batch_ids = find_top_x(x=batch_size, test_ids=all_data["test_ids"], y_test_score=y_var_normalised)
     if ucb:
         ucb = y_ranking_normalised + ucb_weighting * y_var_normalised
-        batch_ids = find_top_x(x=batch_size, y_test_score=ucb)
+        batch_ids = find_top_x(x=batch_size, test_ids=all_data["test_ids"], y_test_score=ucb)
 
     top_y = max(all_data['y_true'][batch_ids])
     model_mse = mean_squared_error(all_data['y_true'][all_data["test_ids"]], y_mean)
@@ -242,8 +243,13 @@ def find_batch_with_pairwise_approach(all_data: dict, ml_model_reg, ml_model_cls
             normal=False,
             ml_model_reg_normal=ml_model_reg_normal)
 
+    print("After testing...")
+    print("Len of sign: ", len(Y_pa_c2_sign))
+    print("Len of abs: ", len(Y_pa_c2_abs))
+
     if not calculate_normal_reg:
         Y_pa_c2_norm = estimate_Y_from_sign_and_abs(all_data, Y_pa_c2_sign, Y_pa_c2_abs)
+
     logging.info("PA - selecting batch...")
     batch_ids, metrics = find_next_batch_pairwise_approach(
         all_data=all_data,
@@ -267,6 +273,12 @@ def run_active_learning_pairwise_approach(
     top_y_record = []  # record of exploitative performance
     mse_record = []  # record of exploration performance
     logging.info("Looping ALPA...")
+
+    print("Size of train, test and c2: ")
+    print(len(all_data["train_ids"]))
+    print(len(all_data["test_ids"]))
+    print(len(all_data["c2_test_pair_ids"]))
+
     for batch_no in range(0, 50):  # if batch_size = 10, loop until train set size = 550.
         logging.info(f"Now running batch number {batch_no}")
 
@@ -277,6 +289,9 @@ def run_active_learning_pairwise_approach(
         batch_id_record.append(batch_ids)
         top_y_record.append(metrics[0])
         mse_record.append(metrics[1])
+
+        check_batch(batch_ids, all_data["train_ids"])
+        print(batch_ids)
 
         train_ids = all_data["train_ids"] + batch_ids
         test_ids = list(set(all_data["test_ids"]) - set(batch_ids))

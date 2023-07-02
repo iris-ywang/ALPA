@@ -48,12 +48,12 @@ def find_next_batch_standard_approach(
     var_normal = y_var / np.linalg.norm(y_var)
 
     if rank_only:
-        batch_ids = find_top_x(x=batch_size, y_test_score=y_ranking_normalised)
+        batch_ids = find_top_x(x=batch_size, test_ids=all_data["test_ids"], y_test_score=y_ranking_normalised)
     if uncertainty_only:
-        batch_ids = find_top_x(x=batch_size, y_test_score=var_normal)
+        batch_ids = find_top_x(x=batch_size, test_ids=all_data["test_ids"], y_test_score=var_normal)
     if ucb:
         ucb = y_ranking_normalised + ucb_weighting * var_normal
-        batch_ids = find_top_x(x=batch_size, y_test_score=ucb)
+        batch_ids = find_top_x(x=batch_size, test_ids=all_data["test_ids"], y_test_score=ucb)
 
     top_y = max(all_data['y_true'][batch_ids])
     model_mse = mean_squared_error(all_data['y_true'][all_data["test_ids"]], y_mean)

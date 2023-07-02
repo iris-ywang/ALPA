@@ -1,4 +1,5 @@
 import numpy as np
+import logging
 from itertools import permutations, product
 
 
@@ -31,7 +32,23 @@ def calculate_pairwise_differences_from_y(
     return Y_pred, Y_true
 
 
-def find_top_x(x: int, y_test_score: np.array) -> list:
-    overall_orders = np.argsort(-y_test_score)  # a list of sample IDs in the descending order of activity values
-    top_tests_id = overall_orders[0: x]
+def find_top_x(x: int, test_ids, y_test_score: np.array) -> list:
+    if len(test_ids) != len(y_test_score):
+        raise ValueError(
+            f"Test set ({len(test_ids)}) and y_test_scores({len(y_test_score)}) don't have the same size. "
+            "Cannot find top batch."
+        )
+
+    # a list of the sequence of y_test in the descending order of activity values
+    overall_orders = np.argsort(-y_test_score)
+    # find the sequence of test_ids
+    ranked_test_ids = np.array(test_ids)[overall_orders]
+    top_tests_id = ranked_test_ids[0: x]
     return list(top_tests_id)
+
+
+def check_batch(batch, train_ids):
+    for i in batch:
+        if i in train_ids:
+            raise IndexError("Batch suggested sample from train_set. ")
+    logging.info("Pass check_batch.")
