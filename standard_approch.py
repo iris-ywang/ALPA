@@ -6,6 +6,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 from pa_basics.run_utils import (
     build_ml_model,
+    check_batch,
     find_top_x,
 )
 
@@ -102,8 +103,14 @@ def run_active_learning_standard_approach(
     batch_id_record = []
     top_y_record = []  # record of exploitative performance
     mse_record = []  # record of exploration performance
+    logging.info("Looping ALSA...")
+    all_data = dict(all_data)
+
     for batch_no in range(0, 50):  # if batch_size = 10, loop until train set size = 550.
         logging.info(f"Now running batch number {batch_no}")
+        print("Size of train, test: ")
+        print(len(all_data["train_ids"]))
+        print(len(all_data["test_ids"]))
         batch_ids, metrics = find_batch_with_standard_approach(
             all_data, ml_model_reg,
             rank_only=rank_only, uncertainty_only=uncertainty_only, ucb=ucb, batch_size=batch_size
@@ -111,6 +118,9 @@ def run_active_learning_standard_approach(
         batch_id_record.append(batch_ids)
         top_y_record.append(metrics[0])
         mse_record.append(metrics[1])
+
+        check_batch(batch_ids, all_data["train_ids"])
+        print(batch_ids)
 
         train_ids = all_data["train_ids"] + batch_ids
         test_ids = list(set(all_data["test_ids"]) - set(batch_ids))

@@ -30,15 +30,15 @@ if __name__ == '__main__':
     train_test = dataset(os.getcwd() + CONNECTION + DATASET_FILENAME, shuffle_state=1)
     data = initial_split_dataset_by_size(train_test, 50)
 
+    logging.info("Starting standard approach active learning...")
+    batch_id_record_sa, top_y_record_sa, mse_record_sa = run_active_learning_standard_approach(
+        data, ML_REG, rank_only, uncertainty_only, ucb, batch_size=BATCH_SIZE
+    )
     logging.info("Starting pairwise approach active learning...")
     batch_id_record_pa, top_y_record_pa, mse_record_pa = run_active_learning_pairwise_approach(
         data, ML_REG, ML_CLS, rank_only, uncertainty_only, ucb, batch_size=BATCH_SIZE
     )
 
-    logging.info("Starting standard approach active learning...")
-    batch_id_record_sa, top_y_record_sa, mse_record_sa = run_active_learning_standard_approach(
-        data, ML_REG, rank_only, uncertainty_only, ucb, batch_size=BATCH_SIZE
-    )
 
     timestr = time.strftime("%Y%m%d-%H%M%S")
     summary = pd.DataFrame(

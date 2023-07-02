@@ -1,3 +1,4 @@
+from copy import deepcopy
 import numpy as np
 import random
 import logging
@@ -15,6 +16,7 @@ from pa_basics.run_utils import (
 )
 
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
+
 
 def run_pairwise_approach_training(
         ml_model_reg,
@@ -35,7 +37,8 @@ def run_pairwise_approach_training(
 
     """
     runs_of_estimators = len(all_data["train_pair_ids"]) // batch_size
-    ml_model_reg_normal = None # if normal is False, None will be returned.
+    # if normal is False, None will be returned; else, make a copy of incoming ml method to avoid cross-changes.
+    ml_model_reg_normal = deepcopy(ml_model_reg) if normal else None
     Y_pa_c1 = []
 
     if runs_of_estimators < 1:
@@ -273,14 +276,15 @@ def run_active_learning_pairwise_approach(
     top_y_record = []  # record of exploitative performance
     mse_record = []  # record of exploration performance
     logging.info("Looping ALPA...")
-
-    print("Size of train, test and c2: ")
-    print(len(all_data["train_ids"]))
-    print(len(all_data["test_ids"]))
-    print(len(all_data["c2_test_pair_ids"]))
+    all_data = dict(all_data)
 
     for batch_no in range(0, 50):  # if batch_size = 10, loop until train set size = 550.
         logging.info(f"Now running batch number {batch_no}")
+
+        print("Size of train, test and c2: ")
+        print(len(all_data["train_ids"]))
+        print(len(all_data["test_ids"]))
+        print(len(all_data["c2_test_pair_ids"]))
 
         batch_ids, metrics = find_batch_with_pairwise_approach(
             all_data, ml_model_reg, ml_model_cls,
