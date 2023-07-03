@@ -27,7 +27,7 @@ if __name__ == '__main__':
     ucb = False
     #
 
-    train_test = dataset(os.getcwd() + CONNECTION + DATASET_FILENAME, shuffle_state=1)
+    train_test = dataset(os.getcwd() + CONNECTION + DATASET_FILENAME, shuffle_state=1111)
     data = initial_split_dataset_by_size(train_test, 50)
 
     logging.info("Starting standard approach active learning...")
@@ -50,4 +50,15 @@ if __name__ == '__main__':
         }
     )
     summary.to_csv("results_summary_"+timestr+".csv", index=False)
+
+    batches_sa = pd.DataFrame(
+        batch_id_record_sa
+    )
+    batches_sa.to_csv("sa_batches"+timestr+".csv", index=False)
+
+    batches_pa = pd.DataFrame(
+        batch_id_record_pa
+    )
+    batches_pa.to_csv("pa_batches"+timestr+".csv", index=False)
+
     logging.info("End. Results saved.")
