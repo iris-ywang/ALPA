@@ -41,48 +41,7 @@ def pair_test_with_train(train_ids, test_ids):
     return c2test_combs
 
 
-def train_test_split(pairs, train_ids, test_ids):
-    """
-    Generate different types of pairs depending on the given sample IDs for training samples and test samples
-    Types of pairing:
-        C1-type: train ID - train ID
-        C2-type: train ID - test ID
-        C3-type: test ID - test ID
-
-    :param pairs: dict of all possible pairs for a filtered dataset
-    :param train_ids: list of int for training sample IDs
-    :param test_ids: list of int for test sample IDs
-    :return: a dict of different types of pairs. It contains the info for samples IDs for pairs, and feature and target
-             values for them.
-    """
-    train_pairs = dict(pairs)
-    c2_test_pairs = []
-    c3_test_pairs = []
-    c2_keys_del = pair_test_with_train(train_ids, test_ids)
-    c3_keys_del = list(permutations(test_ids, 2)) + [(a, a) for a in test_ids]
-
-    for key in c2_keys_del:
-        c2_test_pairs.append(train_pairs.pop(key))
-    for key in c3_keys_del:
-        c3_test_pairs.append(train_pairs.pop(key))
-    c2_test_pairs = np.array(c2_test_pairs)
-    c3_test_pairs = np.array(c3_test_pairs)
-
-    c1_keys_del, trainp = [], []
-    for a, b in train_pairs.items():
-        c1_keys_del.append(a)
-        trainp.append(b)
-    train_pairs = np.array(trainp)
-
-    return {'train_pairs': train_pairs,
-            'train_pair_ids': c1_keys_del,
-            'c2_test_pairs': c2_test_pairs,
-            'c2_test_pair_ids': c2_keys_del,
-            'c3_test_pairs': c3_test_pairs,
-            'c3_test_pair_ids': c3_keys_del}
-
-
-def initial_split_dataset_by_size(train_test, n_train):
+def initial_split_dataset_by_size(train_test_all, n_train, proportion_left_out_test=0.0):
     """
     Generate training sets and test sets for standard approach(regression on FP and activities) and for pairwise approach
      (regression on pairwise features and differences in activities) for designated train set size.
@@ -91,17 +50,36 @@ def initial_split_dataset_by_size(train_test, n_train):
     :return: a dict, keys =  fold number, values = the corresponding pre-processed training and test data and
              sample information
     """
-    y_true = np.array(train_test[:, 0])
+    length_left_out_test_set = int(proportion_left_out_test * len(train_test_all))
+    length_train_test = len(train_test_all) - length_left_out_test_set
+    if length_left_out_test_set > 0:
+        train_test = np.array(train_test_all)[:length_train_test]  # first part is for search space
+        left_out_test_set = np.array(train_test_all)[length_train_test:]  # second part is for test space
+        left_out_test_ids = list(range(length_train_test, len(train_test_all)))
+
+    elif length_left_out_test_set == 0:
+        train_test = np.array(train_test_all)
+        left_out_test_set = None
+        left_out_test_ids = None
+        left_out_test_c2_pair_ids = None
+
+    y_true = np.array(train_test_all[:, 0])
     train_ids = list(range(0, n_train))
-    test_ids = list(range(n_train, len(y_true)))
+    test_ids = list(range(n_train, len(train_test)))
 
     c1_keys_del = list(permutations(train_ids, 2)) + [(a, a) for a in train_ids]
     c2_keys_del = pair_test_with_train(train_ids, test_ids)
     c3_keys_del = list(permutations(test_ids, 2)) + [(a, a) for a in test_ids]
+
+    if left_out_test_set is not None:
+        left_out_test_c2_pair_ids = pair_test_with_train(train_ids, left_out_test_ids)
+
     train_test_data = {'train_test': train_test,
-                                'train_ids': train_ids, 'test_ids': test_ids,
-                                # 'train_set': train_test[train_ids], 'test_set': train_test[test_ids],
-                                'y_true': y_true, "train_pair_ids": c1_keys_del,
-                                "c2_test_pair_ids": c2_keys_del, "c3_test_pair_ids": c3_keys_del}
+                       "dataset": train_test_all,
+                        'train_ids': train_ids, 'test_ids': test_ids,
+                        'y_true': y_true, "train_pair_ids": c1_keys_del,
+                        "c2_test_pair_ids": c2_keys_del, "c3_test_pair_ids": c3_keys_del,
+                        "left_out_test_set": left_out_test_set, "left_out_test_ids": left_out_test_ids,
+                        "left_out_test_c2_pair_ids": left_out_test_c2_pair_ids}
 
     return train_test_data
