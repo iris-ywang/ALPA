@@ -299,10 +299,10 @@ def run_active_learning_pairwise_approach(
     for batch_no in range(0, 50):  # if batch_size = 10, loop until train set size = 550.
         logging.info(f"Now running batch number {batch_no}")
 
-        print("Size of train, test and c2: ")
-        print(len(all_data["train_ids"]))
-        print(len(all_data["test_ids"]))
-        print(len(all_data["c2_test_pair_ids"]))
+        print(f"Size of train, test and c2: "
+              f"{len(all_data['train_ids'])}, "
+              f"{len(all_data['test_ids'])}, "
+              f"{len(all_data['c2_test_pair_ids'])}")
 
         batch_ids, metrics = find_batch_with_pairwise_approach(
             all_data, ml_model_reg, ml_model_cls,

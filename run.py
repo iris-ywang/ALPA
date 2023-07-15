@@ -27,14 +27,14 @@ def run_single_dataset(dataset_filename, dataset_shuffle_state=None):
 
     # only one of them can be True.
     logging.info(f"Dataset name: {dataset_filename}")
-    rank_only = False
-    uncertainty_only = True
+    rank_only = True
+    uncertainty_only = False
     ucb = False
     proportion_leave_out_test = 0.15  # 0 - 1
     logging.info(f"Acquisition function setting: "
                  f"rank_only - {rank_only}, "
                  f"uncertainty_only - {uncertainty_only}, "
-                 f"ucb - {ucb}"
+                 f"ucb - {ucb}, "
                  f"proportion of leave_out_test_set - {proportion_leave_out_test}")
 
     ML_REG = RandomForestRegressor(**RANDOM_FOREST_ARGS)
