@@ -44,10 +44,15 @@ def run_single_dataset(dataset_filename, dataset_shuffle_state=None):
         dataset_shuffle_state = 1
 
     train_test = dataset(os.getcwd() + CONNECTION + dataset_filename, shuffle_state=dataset_shuffle_state)
+
     size = len(train_test)
-    initial_size = int(0.05 * size)
-    batch_size = int(0.01 * size) if int(0.01 * size) != 0 else 1
+    initial_size = 50
+    batch_size = 10
+    if size < 1000:
+        initial_size = int(0.05 * size)
+        batch_size = int(0.01 * size) if int(0.01 * size) != 0 else 1
     logging.info(f"Initial train set size: {initial_size}, batch size: {batch_size}")
+
     data = initial_split_dataset_by_size(train_test, initial_size, proportion_left_out_test=proportion_leave_out_test)
 
     logging.info("Starting standard approach active learning...")
@@ -91,3 +96,4 @@ def run_single_dataset(dataset_filename, dataset_shuffle_state=None):
     return timestr
 
 # TODO: add saving log file
+# TODO: add random search as a baseline

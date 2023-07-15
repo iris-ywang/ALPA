@@ -312,7 +312,6 @@ def run_active_learning_pairwise_approach(
         metrics_record.append(metrics)
 
         check_batch(batch_ids, all_data["train_ids"])
-        print(batch_ids)
 
         train_ids = all_data["train_ids"] + batch_ids
         test_ids = list(set(all_data["test_ids"]) - set(batch_ids))
