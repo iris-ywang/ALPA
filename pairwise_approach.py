@@ -68,7 +68,7 @@ def run_pairwise_approach_testing(
         ml_model_cls,
         all_data: dict,
         c2_or_c3: str,
-        batch_size=100000,
+        batch_size=1000000,
         sign=True,
         abs=True,
         normal=False,
