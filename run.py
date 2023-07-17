@@ -29,7 +29,7 @@ def run_single_dataset(dataset_filename, dataset_shuffle_state=None):
     logging.info(f"Dataset name: {dataset_filename}")
     rank_only = False
     uncertainty_only = False
-    ucb = False
+    ucb = True
     proportion_leave_out_test = 0.15  # 0 - 1
     logging.info(f"Acquisition function setting: "
                  f"rank_only - {rank_only}, "
