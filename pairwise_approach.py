@@ -24,7 +24,7 @@ def run_pairwise_approach_training(
         ml_model_reg,
         ml_model_cls,
         all_data: dict,
-        batch_size=1000000,
+        batch_size=10000000,
         warm_start_availability=False,
         normal=False):
     """
