@@ -27,7 +27,7 @@ def run_single_dataset(dataset_filename, dataset_shuffle_state=None):
 
     # only one of them can be True.
     logging.info(f"Dataset name: {dataset_filename}")
-    rank_only = True
+    rank_only = False
     uncertainty_only = False
     ucb = False
     proportion_leave_out_test = 0.15  # 0 - 1
@@ -59,10 +59,15 @@ def run_single_dataset(dataset_filename, dataset_shuffle_state=None):
     batch_id_record_sa, metrics_record_sa = run_active_learning_standard_approach(
         data, ML_REG, rank_only, uncertainty_only, ucb, batch_size=batch_size
     )
-    logging.info("Starting pairwise approach active learning...")
-    batch_id_record_pa, metrics_record_pa = run_active_learning_pairwise_approach(
-        data, ML_REG, ML_CLS, rank_only, uncertainty_only, ucb, batch_size=batch_size
-    )
+
+    if (rank_only or uncertainty_only or ucb):
+        logging.info("Starting pairwise approach active learning...")
+        batch_id_record_pa, metrics_record_pa = run_active_learning_pairwise_approach(
+            data, ML_REG, ML_CLS, rank_only, uncertainty_only, ucb, batch_size=batch_size
+        )
+    else:
+        batch_id_record_pa = batch_id_record_sa
+        metrics_record_pa = metrics_record_sa
 
     timestr = time.strftime("%Y%m%d-%H%M%S")
 
