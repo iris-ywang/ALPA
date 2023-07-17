@@ -7,7 +7,7 @@ if __name__ == '__main__':
     record = {}
     for dataset_filename in list_of_dataset:
         record[dataset_filename] = []
-        for random_state in [1,2,3]:
+        for random_state in [1]:
             time_str = run_single_dataset(dataset_filename, dataset_shuffle_state=random_state)
             record[dataset_filename].append(time_str)
             print(record)
