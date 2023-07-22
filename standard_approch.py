@@ -129,7 +129,7 @@ def run_active_learning_standard_approach(
     logging.info("Looping ALSA...")
     all_data = dict(all_data)
 
-    for batch_no in range(0, 25):  # if batch_size = 10, loop until train set size = 550.
+    for batch_no in range(0, 20):  # if batch_size = 10, loop until train set size = 550.
         logging.info(f"Now running batch number {batch_no}")
         print(f"Size of train, test and c2: "
               f"{len(all_data['train_ids'])}, "
