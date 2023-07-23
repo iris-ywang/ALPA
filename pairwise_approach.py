@@ -2,6 +2,7 @@ from copy import deepcopy
 import numpy as np
 import random
 import logging
+from time import perf_counter
 from itertools import permutations, product
 from sklearn.metrics import mean_squared_error
 
@@ -93,8 +94,11 @@ def run_pairwise_approach_testing(
                                  test_batch * batch_size: (test_batch + 1) * batch_size]
         else:
             test_pair_id_batch = test_pair_ids[test_batch * batch_size:]
+        start = perf_counter()
         test_pairs_batch = paired_data_by_pair_id(data=all_data["dataset"],
                                                   pair_ids=test_pair_id_batch)
+        end = perf_counter()
+        logging.info(f"Time required to pair {len(test_pair_id_batch)} pairs is {end - start} s.")
         Y_pa_true += list(test_pairs_batch[:, 0])
         if sign: Y_pa_sign += list(ml_model_cls.predict(test_pairs_batch[:, 1:]))
         if abs: Y_pa_dist += list(ml_model_reg_abs.predict(np.absolute(test_pairs_batch[:, 1:])))

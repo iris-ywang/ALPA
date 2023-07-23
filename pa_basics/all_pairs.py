@@ -65,8 +65,9 @@ def paired_data_by_pair_id(data, pair_ids, sign_only=False):
                                           pair_ids,
                                           sign_only)
 
-    with multiprocessing.Pool(processes=None) as executor:
-        results = executor.map(pairing_tool.parallelised_pairing_process, range(pairing_tool.n_combinations))
+    # with multiprocessing.Pool(processes=None) as executor:
+    #     results = executor.map(pairing_tool.parallelised_pairing_process, range(pairing_tool.n_combinations))
+    results = map(pairing_tool.parallelised_pairing_process, range(pairing_tool.n_combinations))
     return np.array([values for _, values in dict(results).items()])
 
 
