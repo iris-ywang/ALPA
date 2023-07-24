@@ -27,8 +27,8 @@ def run_single_dataset(dataset_filename, dataset_shuffle_state=None):
 
     # only one of them can be True.
     logging.info(f"Dataset name: {dataset_filename}")
-    rank_only = False
-    uncertainty_only = True
+    rank_only = True
+    uncertainty_only = False
     ucb = False
     proportion_leave_out_test = 0.15  # 0 - 1
     logging.info(f"Acquisition function setting: "
@@ -70,6 +70,7 @@ def run_single_dataset(dataset_filename, dataset_shuffle_state=None):
         metrics_record_pa = metrics_record_sa
 
     timestr = time.strftime("%Y%m%d-%H%M%S")
+    logging.info(f"Dataset {dataset_filename} is matched with time str {timestr}")
 
     if data["left_out_test_set"] is None:
         column_names = ["top_y"]
