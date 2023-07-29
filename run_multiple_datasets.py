@@ -1,4 +1,5 @@
 import os
+import logging
 from run import run_single_dataset
 
 if __name__ == '__main__':
@@ -14,3 +15,4 @@ if __name__ == '__main__':
             time_str = run_single_dataset(dataset_filename, dataset_shuffle_state=random_state)
             record[dataset_filename].append(time_str)
             print(record)
+        logging.info(f"Results dict: {record}")

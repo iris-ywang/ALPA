@@ -16,7 +16,9 @@ from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 
 # Cu
-RANDOM_FOREST_ARGS = {"random_state": 5963, "n_jobs": -1}
+n_cpu = os.cpu_count()
+sk_n_jobs = int(n_cpu / 5) if int(n_cpu / 5) >= 1 else 1
+RANDOM_FOREST_ARGS = {"random_state": 5963, "n_jobs": sk_n_jobs}
 CONNECTION = "//input_data//"
 # DATASET_FILENAME = "data_CHEMBL2024.csv"
 
@@ -69,8 +71,8 @@ def run_single_dataset(dataset_filename, dataset_shuffle_state=None):
         batch_id_record_pa = batch_id_record_sa
         metrics_record_pa = metrics_record_sa
 
-    timestr = time.strftime("%Y%m%d-%H%M%S")
-    logging.info(f"Dataset {dataset_filename} is matched with time str {timestr}")
+    time_data_id_str = dataset_filename.replace("data_CHEMBL", "").replace(".csv", "") + "_" + time.strftime("%Y%m%d-%H%M%S")
+    logging.info(f"Dataset {dataset_filename} is matched with time str {time_data_id_str}")
 
     if data["left_out_test_set"] is None:
         column_names = ["top_y"]
@@ -85,21 +87,21 @@ def run_single_dataset(dataset_filename, dataset_shuffle_state=None):
     )
     summary = pd.concat([summary_sa, summary_pa], axis=1)
 
-    summary.to_csv("results_summary_"+timestr+".csv", index=False)
+    summary.to_csv("results_summary_"+time_data_id_str+".csv", index=False)
 
     batches_sa = pd.DataFrame(
         batch_id_record_sa
     )
-    batches_sa.to_csv("sa_batches"+timestr+".csv", index=False)
+    batches_sa.to_csv("sa_batches"+time_data_id_str+".csv", index=False)
 
     batches_pa = pd.DataFrame(
         batch_id_record_pa
     )
-    batches_pa.to_csv("pa_batches"+timestr+".csv", index=False)
+    batches_pa.to_csv("pa_batches"+time_data_id_str+".csv", index=False)
 
     logging.info("End. Results saved.")
     print("\n \n")
-    return timestr
+    return time_data_id_str
 
 # TODO: add saving log file
 # TODO: add random search as a baseline
