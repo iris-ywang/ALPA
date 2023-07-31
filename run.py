@@ -17,14 +17,15 @@ logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 
 # Cu
 n_cpu = os.cpu_count()
-sk_n_jobs = int(n_cpu / 5) if int(n_cpu / 5) >= 1 else 1
+sk_n_jobs = int(n_cpu / 6) if int(n_cpu / 6) >= 1 else 1
 RANDOM_FOREST_ARGS = {"random_state": 5963, "n_jobs": sk_n_jobs}
 CONNECTION = "//input_data//"
 # DATASET_FILENAME = "data_CHEMBL2024.csv"
 
 
 # if __name__ == '__main__':
-def run_single_dataset(dataset_filename, dataset_shuffle_state=None):
+def run_single_dataset(dataset_filename, output_path="", dataset_shuffle_state=None):
+    logging.info(f"Output_path: {output_path}")
     warnings.filterwarnings("ignore")
 
     # only one of them can be True.
@@ -87,17 +88,17 @@ def run_single_dataset(dataset_filename, dataset_shuffle_state=None):
     )
     summary = pd.concat([summary_sa, summary_pa], axis=1)
 
-    summary.to_csv("results_summary_"+time_data_id_str+".csv", index=False)
+    summary.to_csv(output_path + "results_summary_"+time_data_id_str+".csv", index=False)
 
     batches_sa = pd.DataFrame(
         batch_id_record_sa
     )
-    batches_sa.to_csv("sa_batches"+time_data_id_str+".csv", index=False)
+    batches_sa.to_csv(output_path +"sa_batches"+time_data_id_str+".csv", index=False)
 
     batches_pa = pd.DataFrame(
         batch_id_record_pa
     )
-    batches_pa.to_csv("pa_batches"+time_data_id_str+".csv", index=False)
+    batches_pa.to_csv(output_path +"pa_batches"+time_data_id_str+".csv", index=False)
 
     logging.info("End. Results saved.")
     print("\n \n")
